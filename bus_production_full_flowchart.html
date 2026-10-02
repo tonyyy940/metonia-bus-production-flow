@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bus Production Full Flowchart</title>
+<style>
+  body { margin: 0; padding: 24px; font-family: Calibri, Segoe UI, sans-serif;
+         background: #ffffff; color: #1F3864; }
+  h1   { font-size: 20px; margin: 0 0 16px 0; }
+  .mermaid { background: #ffffff; }
+</style>
+</head>
+<body>
+<h1>Bus Production Full Flowchart</h1>
+<pre class="mermaid">
+flowchart TD
+    START([START: Customer PO Received])
+
+    %% ================= PHASE 0 =================
+    subgraph PH0["PHASE 0 — Sales / Engineering"]
+        direction TB
+        A1["0.1 Log customer PO / contract"]
+        A2["0.2 Finalise technical spec and body drawing with customer"]
+        A3["0.3 Generate Bill of Materials from approved drawing"]
+        A4["0.4 Open production job card, assign job/body number"]
+        A5["0.5 Release drawing package: frame, panel, paint, trim"]
+        DA{{"Drawings and BOM approved?"}}
+        DOC_BOM[/"BOM + Drawing Package + Job Card"/]
+    end
+
+    START --> A1 --> A2 --> A3 --> A4 --> A5 --> DA
+    DA -- No --> A2
+    DA -- Yes --> DOC_BOM --> B1
+
+    %% ================= PHASE 1 =================
+    subgraph PH1["PHASE 1 — Procurement / Store / Incoming QC"]
+        direction TB
+        B1["1.1 Store checks stock against released BOM"]
+        B2["1.2 Raise Material Requisition Form for shortfalls"]
+        B3["1.3 Review and approve purchase requisition"]
+        B4["1.4 Issue Purchase Order to approved supplier"]
+        B5["1.5 Supplier delivers, raise Goods Received Note"]
+        B6["1.6 Incoming QC: dimensions, mill certs, visual, quantity"]
+        DB{{"Material conforms to spec?"}}
+        B7["1.7 Raise SNCR, quarantine/reject, return or re-order"]
+        B8["1.8 Receive into store, bin-locate"]
+        B9["1.9 Issue to production via Material Issue Note"]
+        DOC_PO[/"Purchase Order + GRN"/]
+        DOC_SNCR[/"Supplier Non-Conformance Report"/]
+    end
+
+    B1 --> B2 --> B3 --> B4 --> DOC_PO --> B5 --> B6 --> DB
+    DB -- No --> B7 --> DOC_SNCR
+    B7 -.-> B4
+    DB -- Yes --> B8 --> B9 --> C1
+
+    %% ================= PHASE 2 =================
+    subgraph PH2["PHASE 2 — Chassis Prep Bay"]
+        direction TB
+
+        subgraph P21["2.1 Chassis-Cab Reception and Intake Inspection"]
+            C1["2.1.1 Receive complete chassis-cab unit"]
+            C2["2.1.2 Verify chassis/VIN and engine number vs documents"]
+            C3["2.1.3 Intake inspection: odometer, condition, fluids, tyres, battery"]
+            C4["2.1.4 Photograph baseline condition, all sides and interior"]
+            C5["2.1.5 Register chassis, assign job number, allocate bay"]
+            QC1{{"QC HOLD: Chassis Intake Acceptance"}}
+        end
+
+        subgraph P22["2.2 Pre-Removal Preparation and Isolation"]
+            C6["2.2.1 Position on level ground/hoist, park brake, chock wheels"]
+            C7["2.2.2 Isolate power: battery negative then positive, lockout/tagout"]
+            C8["2.2.3 Depressurise/drain air reservoirs and cab heater coolant circuit"]
+            C9["2.2.4 Tag and photograph all harnesses, hoses, cables at cab interface"]
+        end
+
+        DCAB{{"Construction type?"}}
+
+        subgraph P23["2.3 Cabin Disconnection"]
+            C10["2.3.a Disconnect cab harness at main multi-pin connectors"]
+            C11["2.3.b Disconnect accelerator, clutch, gear shift, brake, park brake linkages"]
+            C12["2.3.c Disconnect steering column coupling from steering box"]
+            C13["2.3.d Recover refrigerant, disconnect heater hoses and A/C lines"]
+            C14["2.3.e Disconnect exhaust from cab-mounted brackets"]
+            C15["2.3.f Disconnect washer lines, horn, cab-mounted lighting"]
+            C16["2.3.g Remove cab-to-chassis mounting fasteners, record torques"]
+            C17["2.3.h Release cab tilt mechanism and hinge pins - COE chassis"]
+            QC2{{"QC HOLD: Pre-Lift Disconnection Check by 2nd technician"}}
+        end
+
+        subgraph P24["2.4 Cabin Lifting and Removal"]
+            C18["2.4.1 Attach rated sling/chain and spreader bar at lift points"]
+            C19["2.4.2 Position overhead crane, gantry or rated forklift attachment"]
+            C20["2.4.3 Slow controlled vertical lift with spotter watching for snags"]
+            C21["2.4.4 Lift clear and transfer cab to storage cradle/stand"]
+            C22["2.4.5 Tag stored cab with chassis/job number, route per BOM"]
+            QC3{{"SAFETY HOLD: Lift Sign-Off - rigging, load rating, clearance"}}
+        end
+
+        subgraph P25["2.5 Bare-Chassis Post-Removal Inspection and Hand-Off"]
+            C23["2.5.1 Inspect frame rails: damage, corrosion, straightness"]
+            C24["2.5.2 Verify wheelbase, frame width, front/rear overhang vs drawing"]
+            C25["2.5.3 Cap and blank all open fuel, brake/air and electrical lines"]
+            C26["2.5.4 Re-route/extend chassis wiring to new driver compartment location"]
+            C27["2.5.5 Fit protective covers over engine bay, radiator, mechanicals"]
+            C28["2.5.6 Degrease and clean chassis top flange for sub-frame mounting"]
+            C29["2.5.7 Update tracker: Chassis-Cab to Bare Chassis"]
+            QC4{{"QC HOLD: Bare-Chassis Acceptance - gate to Phase 3"}}
+        end
+    end
+
+    C1 --> C2 --> C3 --> C4 --> C5 --> QC1
+    QC1 -- Fail --> C3
+    QC1 -- Pass --> C6 --> C7 --> C8 --> C9 --> DCAB
+    DCAB -- "Full-integral<br/>new cab to be built" --> C10
+    DCAB -- "Cab-retained<br/>factory cab kept" --> C23
+    C10 --> C11 --> C12 --> C13 --> C14 --> C15 --> C16 --> C17 --> QC2
+    QC2 -- Not clear --> C10
+    QC2 -- All clear --> QC3 --> C18 --> C19 --> C20 --> C21 --> C22 --> C23
+    C23 --> C24 --> C25 --> C26 --> C27 --> C28 --> C29 --> QC4
+    QC4 -- Fail --> C23
+    QC4 -- Pass --> D1
+
+    %% ================= PHASE 3 =================
+    subgraph PH3["PHASE 3 — Frame / Fabrication Shop"]
+        direction TB
+        D1["3.1 Mount bare chassis on body-build jig / rotisserie"]
+        D2["3.2 Fabricate floor frame and mount to chassis with isolation pads"]
+        D3["3.3 Fabricate LH and RH side-wall frames in jigs, tack and square"]
+        D4["3.4 Fabricate roof frame and bows in jig"]
+        D5["3.5 Fabricate front frame, bulkhead and windscreen frame"]
+        D6["3.6 Fabricate rear frame and engine-bay frame"]
+        D7["3.7 Transport sub-assemblies to marriage station"]
+        D8["3.8 Marry frame: erect sides, roof, front, rear onto floor frame, brace square"]
+        D9["3.9 Complete structural welding per WPS - AWS D1.1"]
+        D10["3.10 Weld inspection: visual plus spot DPI/MPI on critical joints - ISO 5817"]
+        D11["3.11 Full dimensional check: diagonals, squareness, L x W x H vs drawing"]
+        QC5{{"QC HOLD: Frame Structural Inspection and Sign-Off"}}
+    end
+
+    D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> D7 --> D8 --> D9 --> D10 --> D11 --> QC5
+    QC5 -- Fail --> D9
+    QC5 -- Pass --> E1
+
+    %% ================= PHASE 4 =================
+    subgraph PH4["PHASE 4 — Panel Shop"]
+        direction TB
+        E1["4.1 Cut panel material: shear, plasma or laser"]
+        E2["4.2 Form, press or roll panels to profile"]
+        E3["4.3 Install floor sheet, insulation and plywood/composite underlay"]
+        E4["4.4 Fit exterior side-skin panels: rivet, bond or weld"]
+        E5["4.5 Fit roof panels"]
+        E6["4.6 Fit front and rear panels/fascia incl. new windscreen aperture"]
+        E7["4.7 Fit wheel-arch, skirt and belly-pan panels"]
+        E8["4.8 Fit and frame door and window apertures"]
+        E9["4.9 Seal all panel joints with seam sealer/mastic"]
+        E10["4.10 Inspect rivet/fastener quality, panel alignment and gaps"]
+        E11["4.11 Apply undercoating and cavity anti-corrosion treatment"]
+        QC6{{"QC HOLD: Body Shell Dimensional and Visual Inspection"}}
+    end
+
+    E1 --> E2 --> E3 --> E4 --> E5 --> E6 --> E7 --> E8 --> E9 --> E10 --> E11 --> QC6
+    QC6 -- Fail --> E10
+    QC6 -- Pass --> F1
+
+    %% ================= PHASE 5 =================
+    subgraph PH5["PHASE 5 — Paint Shop"]
+        direction TB
+        F1["5.1 Surface prep: degrease, sand, feather-edge, rust treatment"]
+        F2["5.2 Mask glass apertures, mechanicals and data plates"]
+        F3["5.3 Apply filler/putty and block-sand smooth"]
+        F4["5.4 Apply primer coat - etch or epoxy"]
+        F5["5.5 Bake/cure primer per data sheet"]
+        F6["5.6 Sand primer and inspect surface finish"]
+        F7["5.7 Apply base/top coat in customer colour and livery"]
+        F8["5.8 Apply clear coat for 2K systems"]
+        F9["5.9 Bake/cure paint in oven"]
+        F10["5.10 Paint QC: DFT, gloss, orange-peel, colour match, runs, adhesion"]
+        DF{{"Paint finish passes QC?"}}
+        F11["5.11 Identify defect, rework/re-sand/re-spray affected area"]
+        F12["5.12 Unmask, apply pin-striping, decals and livery graphics"]
+        QC7{{"QC HOLD: Paint Release Inspection"}}
+    end
+
+    F1 --> F2 --> F3 --> F4 --> F5 --> F6 --> F7 --> F8 --> F9 --> F10 --> DF
+    DF -- No --> F11 --> F10
+    DF -- Yes --> F12 --> QC7
+    QC7 -- Fail --> F11
+    QC7 -- Pass --> G1
+
+    %% ================= PHASE 6 =================
+    subgraph PH6["PHASE 6 — Finishing / Trim Shop"]
+        direction TB
+        G1["6.1 Install interior ceiling lining"]
+        G2["6.2 Install interior side-wall panels"]
+        G3["6.3 Install vinyl/rubber flooring and gangway matting"]
+        G4["6.4 Install body wiring harness: lighting, wipers, PA, destination display"]
+        G5["6.5 Install glazing: windscreen, side and emergency exit windows"]
+        G6["6.6 Install doors and door mechanisms"]
+        G7["6.7 Install seat rails and seats per layout drawing - UN R80"]
+        G8["6.8 Install luggage racks and overhead console"]
+        G9["6.9 Install HVAC: roof A/C unit, ducting, heater"]
+        G10["6.10 Assemble dashboard and reconnect chassis harness/linkages tagged in 2.2"]
+        G11["6.11 Fit mirrors, wipers, horn and exterior lighting"]
+        G12["6.12 Fit mudguards, bumpers and exterior trim"]
+        G13["6.13 Apply final livery, graphics and customer branding"]
+        G14["6.14 Install safety items: extinguisher, hammers, first-aid, signage, seatbelts"]
+        G15["6.15 Fit upholstery: seat covers and curtains"]
+        G16["6.16 Reconnect battery, complete final electrical connections"]
+        QC8{{"QC HOLD: Trim and Systems Fit-Out Inspection"}}
+    end
+
+    G1 --> G2 --> G3 --> G4 --> G5 --> G6 --> G7 --> G8 --> G9 --> G10 --> G11 --> G12 --> G13 --> G14 --> G15 --> G16 --> QC8
+    QC8 -- Fail --> G16
+    QC8 -- Pass --> H1
+
+    %% ================= PHASE 7 =================
+    subgraph PH7["PHASE 7 — QC / Test Bay"]
+        direction TB
+        H1["7.1 Test electrical: lights, indicators, wipers, horn, PA, signs"]
+        H2["7.2 Test HVAC system"]
+        H3["7.3 Test doors, emergency exits and safety interlocks"]
+        H4["7.4 Test brakes: service, park, air/hydraulic pressure and leak check"]
+        H5["7.5 Water-leak test: roof, windows, door seals"]
+        H6["7.6 Check suspension and steering"]
+        H7["7.7 Start engine: idle, gauges, warning lights"]
+        H8["7.8 Road test: acceleration, braking, steering, shifting, NVH, speedo"]
+        DH{{"Any defects found?"}}
+        H9["7.9 Log defect and route to responsible station for rectification"]
+    end
+
+    H1 --> H2 --> H3 --> H4 --> H5 --> H6 --> H7 --> H8 --> DH
+    DH -- Yes --> H9
+    H9 -.-> G1
+    H9 -.-> F1
+    H9 -.-> D9
+    H9 --> H1
+    DH -- No --> I1
+
+    %% ================= PHASE 8 =================
+    subgraph PH8["PHASE 8 — QA Manager / Customer Rep"]
+        direction TB
+        I1["8.1 Full PDI checklist: exterior, interior, mechanical, electrical, safety, documentation"]
+        I2["8.2 Clean and detail: interior valet, exterior wash and polish"]
+        I3["8.3 Final QC sign-off by QA Manager with customer rep where contracted"]
+        DI{{"Vehicle passes PDI?"}}
+        I4["8.4 Return to responsible station for rectification"]
+        DOC_PDI[/"PDI Certificate"/]
+    end
+
+    I1 --> I2 --> I3 --> DI
+    DI -- No --> I4 --> H1
+    DI -- Yes --> DOC_PDI --> J1
+
+    %% ================= PHASE 9 =================
+    subgraph PH9["PHASE 9 — Logistics / Admin"]
+        direction TB
+        J1["9.1 Compile handover pack: CoC, warranty, manual, compliance docs, invoice"]
+        J2["9.2 Complete registration formalities with customer and authority"]
+        J3["9.3 Customer handover: walk-around briefing and test drive"]
+        J4["9.4 Arrange dispatch/delivery or customer collection"]
+        J5["9.5 Close job card, archive production record, open warranty feedback loop"]
+        DOC_HO[/"Handover Documentation Pack"/]
+    end
+
+    J1 --> DOC_HO --> J2 --> J3 --> J4 --> J5 --> ENDN([END: Vehicle Delivered / Job Card Closed])
+
+    %% ================= STYLING =================
+    classDef proc fill:#FFFFFF,stroke:#44546A,stroke-width:1px,color:#000
+    classDef dec fill:#FFF2CC,stroke:#BF8F00,stroke-width:1.5px,color:#000
+    classDef qcgate fill:#DDEBF7,stroke:#2E75B6,stroke-width:2px,color:#000
+    classDef docnode fill:#F2F2F2,stroke:#7F7F7F,stroke-dasharray:3 3,color:#000
+    classDef term fill:#1F3864,stroke:#1F3864,stroke-width:2px,color:#FFFFFF
+
+    class DA,DB,DF,DH,DI,DCAB dec
+    class QC1,QC2,QC3,QC4,QC5,QC6,QC7,QC8 qcgate
+    class DOC_BOM,DOC_PO,DOC_SNCR,DOC_PDI,DOC_HO docnode
+    class START,ENDN term
+
+</pre>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose",
+                       flowchart: { useMaxWidth: true, htmlLabels: true } });
+</script>
+</body>
+</html>
